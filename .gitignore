@@ -1,0 +1,11 @@
+# Gradle
+build/
+out/
+/.gradle/
+
+#intellij
+/.idea/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
