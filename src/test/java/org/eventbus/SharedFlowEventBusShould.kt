@@ -1,8 +1,5 @@
 package org.eventbus
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
@@ -14,30 +11,48 @@ class SharedFlowEventBusShould {
 
     @Test
     fun `publish events to subscribers`() {
-            val subscriberForTesting = SubscriberForTesting()
-            sharedFlowEventBus.subscribe(subscriberForTesting)
-            val somethingHappened = SomethingHappened()
+        val orderCreatedSubscriber = OrderCreatedSubscriber()
+        val orderCancelledSubscriber = OrderCancelledSubscriber()
+        sharedFlowEventBus.subscribe(orderCreatedSubscriber)
+        sharedFlowEventBus.subscribe(orderCancelledSubscriber)
+        val orderCreated = OrderCreated()
+        val orderCancelled = OrderCancelled()
 
-            sharedFlowEventBus.publish(somethingHappened)
+        sharedFlowEventBus.publish(orderCreated)
+        sharedFlowEventBus.publish(orderCancelled)
 
-            assertThat(subscriberForTesting.events)
-                .contains(somethingHappened)
+        assertThat(orderCreatedSubscriber.events)
+            .containsExactly(orderCreated)
+        assertThat(orderCancelledSubscriber.events)
+            .containsExactly(orderCancelled)
     }
+    
 
 
-    data class SomethingHappened(private val occurredOn: OffsetDateTime = OffsetDateTime.now()) : DomainEvent {
+    data class OrderCreated(private val occurredOn: OffsetDateTime = OffsetDateTime.now()) : DomainEvent {
         override fun occurredOn(): OffsetDateTime {
             return occurredOn
         }
-
     }
 
-    class SubscriberForTesting : DomainEventSubscriber<SomethingHappened> {
-        val events = mutableListOf<DomainEvent>()
-        override fun consume(event: SomethingHappened) {
-            GlobalScope.launch {
-                events.add(event)
-            }
+    data class OrderCancelled(private val occurredOn: OffsetDateTime = OffsetDateTime.now()) : DomainEvent {
+        override fun occurredOn(): OffsetDateTime {
+            return occurredOn
         }
+    }
+
+    abstract class SubscriberForTesting<T : DomainEvent> : DomainEventSubscriber<T> {
+        val events = mutableListOf<T>()
+        override fun consume(event: T) {
+            events.add(event)
+        }
+    }
+
+    class OrderCreatedSubscriber : SubscriberForTesting<OrderCreated>() {
+        override fun subscribedTo(): Class<OrderCreated> = OrderCreated::class.java
+    }
+
+    class OrderCancelledSubscriber : SubscriberForTesting<OrderCancelled>(){
+        override fun subscribedTo(): Class<OrderCancelled> = OrderCancelled::class.java
     }
 }

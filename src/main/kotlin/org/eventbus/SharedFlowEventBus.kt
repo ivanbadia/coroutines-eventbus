@@ -4,6 +4,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
 class SharedFlowEventBus : EventBus {
@@ -18,7 +19,9 @@ class SharedFlowEventBus : EventBus {
 
     fun subscribe(subscriber: DomainEventSubscriber<*>) {
         GlobalScope.launch {
-            events.collect { event -> (subscriber as DomainEventSubscriber<DomainEvent>).consume(event) }
+            events
+                .filter { event -> subscriber.subscribedTo() == event.javaClass }
+                .collect { event -> (subscriber as DomainEventSubscriber<DomainEvent>).consume(event) }
         }
     }
 
