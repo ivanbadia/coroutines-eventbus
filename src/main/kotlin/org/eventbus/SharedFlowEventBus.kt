@@ -1,5 +1,8 @@
 package org.eventbus
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collect
@@ -10,7 +13,7 @@ class SharedFlowEventBus : EventBus {
     private val events = MutableSharedFlow<DomainEvent>()
 
     override fun publish(event: DomainEvent) {
-        GlobalScope.launch {
+        CoroutineScope(Unconfined).launch {
             events.emit(event)
         }
     }
