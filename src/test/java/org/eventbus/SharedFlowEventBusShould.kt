@@ -6,53 +6,31 @@ import java.time.OffsetDateTime
 
 
 class SharedFlowEventBusShould {
-
-    private val sharedFlowEventBus = SharedFlowEventBus()
+    private val eventBus = SharedFlowEventBus()
+    private val orderCreatedSubscriber = OrderCreatedSubscriber()
+    private val orderCancelledSubscriber = OrderCancelledSubscriber()
 
     @Test
     fun `publish events to subscribers`() {
-        val orderCreatedSubscriber = OrderCreatedSubscriber()
-        val orderCancelledSubscriber = OrderCancelledSubscriber()
-        sharedFlowEventBus.subscribe(orderCreatedSubscriber)
-        sharedFlowEventBus.subscribe(orderCancelledSubscriber)
+        eventBus
+            .subscribe(orderCreatedSubscriber)
+            .subscribe(orderCancelledSubscriber)
         val orderCreated = OrderCreated()
         val orderCancelled = OrderCancelled()
 
-        sharedFlowEventBus.publish(orderCreated)
-        sharedFlowEventBus.publish(orderCancelled)
+        eventBus.publish(orderCreated)
+        eventBus.publish(orderCancelled)
 
-        assertThat(orderCreatedSubscriber.events)
+        assertThat(orderCreatedSubscriber.receivedEvents)
             .containsExactly(orderCreated)
-        assertThat(orderCancelledSubscriber.events)
+        assertThat(orderCancelledSubscriber.receivedEvents)
             .containsExactly(orderCancelled)
     }
-    
-
-
-    data class OrderCreated(private val occurredOn: OffsetDateTime = OffsetDateTime.now()) : DomainEvent {
-        override fun occurredOn(): OffsetDateTime {
-            return occurredOn
-        }
-    }
-
-    data class OrderCancelled(private val occurredOn: OffsetDateTime = OffsetDateTime.now()) : DomainEvent {
-        override fun occurredOn(): OffsetDateTime {
-            return occurredOn
-        }
-    }
-
-    abstract class SubscriberForTesting<T : DomainEvent> : DomainEventSubscriber<T> {
-        val events = mutableListOf<T>()
-        override fun consume(event: T) {
-            events.add(event)
-        }
-    }
-
-    class OrderCreatedSubscriber : SubscriberForTesting<OrderCreated>() {
-        override fun subscribedTo(): Class<OrderCreated> = OrderCreated::class.java
-    }
-
-    class OrderCancelledSubscriber : SubscriberForTesting<OrderCancelled>(){
-        override fun subscribedTo(): Class<OrderCancelled> = OrderCancelled::class.java
-    }
 }
+
+data class OrderCreated(override val occurredOn: OffsetDateTime = OffsetDateTime.now()) : DomainEvent
+
+data class OrderCancelled(override  val occurredOn: OffsetDateTime = OffsetDateTime.now()) : DomainEvent
+
+class OrderCreatedSubscriber : SubscriberForTesting<OrderCreated>()
+class OrderCancelledSubscriber : SubscriberForTesting<OrderCancelled>()

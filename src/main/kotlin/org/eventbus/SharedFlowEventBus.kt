@@ -17,13 +17,19 @@ class SharedFlowEventBus : EventBus {
         }
     }
 
-    fun subscribe(subscriber: DomainEventSubscriber<*>) {
+    inline fun <reified T : DomainEvent> subscribe(subscriber: DomainEventSubscriber<T>): SharedFlowEventBus {
+        registerSubscriber(subscriber, T::class.java)
+        return this
+    }
+
+    fun <T : DomainEvent> registerSubscriber(subscriber: DomainEventSubscriber<T>, eventType: Class<T>) {
         GlobalScope.launch {
             events
-                .filter { event -> subscriber.subscribedTo() == event.javaClass }
+                .filter { event ->
+                    eventType == event.javaClass
+
+                }
                 .collect { event -> (subscriber as DomainEventSubscriber<DomainEvent>).consume(event) }
         }
     }
-
-
 }
