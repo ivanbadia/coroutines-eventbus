@@ -2,18 +2,16 @@ package org.eventbus
 
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
 class SharedFlowEventBus : EventBus {
-    private val _events = MutableSharedFlow<DomainEvent>()
-    private val events = _events.asSharedFlow()
+    private val events = MutableSharedFlow<DomainEvent>()
 
     override fun publish(event: DomainEvent) {
         GlobalScope.launch {
-            _events.emit(event)
+            events.emit(event)
         }
     }
 
@@ -22,14 +20,14 @@ class SharedFlowEventBus : EventBus {
         return this
     }
 
-    fun <T : DomainEvent> registerSubscriber(subscriber: DomainEventSubscriber<T>, eventType: Class<T>) {
+    fun <T : DomainEvent> registerSubscriber(subscriber: DomainEventSubscriber<T>, subscribedEventType: Class<T>) {
         GlobalScope.launch {
             events
-                .filter { event ->
-                    eventType == event.javaClass
-
-                }
+                .filter(eventTypeIsEqualTo(subscribedEventType))
                 .collect { event -> (subscriber as DomainEventSubscriber<DomainEvent>).consume(event) }
         }
     }
+
+    private fun <T : DomainEvent> eventTypeIsEqualTo(eventType: Class<T>): suspend (DomainEvent) -> Boolean =
+        { event -> eventType == event.javaClass }
 }

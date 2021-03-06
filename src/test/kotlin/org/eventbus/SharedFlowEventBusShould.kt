@@ -33,4 +33,5 @@ data class OrderCreated(override val occurredOn: OffsetDateTime = OffsetDateTime
 data class OrderCancelled(override  val occurredOn: OffsetDateTime = OffsetDateTime.now()) : DomainEvent
 
 class OrderCreatedSubscriber : SubscriberForTesting<OrderCreated>()
+
 class OrderCancelledSubscriber : SubscriberForTesting<OrderCancelled>()
