@@ -15,11 +15,11 @@ class SharedFlowEventBus : EventBus {
         }
     }
 
-    inline fun <reified T : DomainEvent> subscribe(subscriber: DomainEventSubscriber<T>): SharedFlowEventBus {
+    inline fun <reified EventType : DomainEvent> subscribe(subscriber: DomainEventSubscriber<EventType>): SharedFlowEventBus {
         CoroutineScope(Default).launch {
             events
-                .filter { event -> event is T }
-                .collect { event -> (subscriber as DomainEventSubscriber<DomainEvent>).consume(event) }
+                .filter { event -> event is EventType }
+                .collect { event  -> subscriber.consume(event as EventType) }
         }
         return this
     }
