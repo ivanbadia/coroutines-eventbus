@@ -13,13 +13,12 @@ class SharedFlowEventBus : EventBus {
 
     override fun publish(event: DomainEvent) {
         scope.launch {
-            println(Thread.currentThread().id)
             _events.emit(event)
         }
     }
 
     inline fun <reified T : DomainEvent> subscribe(subscriber: DomainEventSubscriber<T>): SharedFlowEventBus {
-        GlobalScope.launch {
+        CoroutineScope(Default).launch {
             events
                 .filter { event -> event is T }
                 .collect { event -> (subscriber as DomainEventSubscriber<DomainEvent>).consume(event) }
