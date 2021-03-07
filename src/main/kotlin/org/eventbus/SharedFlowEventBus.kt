@@ -2,17 +2,15 @@ package org.eventbus
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class SharedFlowEventBus : EventBus {
     private val _events = MutableSharedFlow<DomainEvent>()
     val events : SharedFlow<DomainEvent> = _events.asSharedFlow()
-    private val scope = CoroutineScope(Default)
 
     override fun publish(event: DomainEvent) {
-        scope.launch {
+        CoroutineScope(Default).launch {
             _events.emit(event)
         }
     }
