@@ -9,9 +9,11 @@ import kotlinx.coroutines.launch
 class SharedFlowEventBus : EventBus {
     private val _events = MutableSharedFlow<DomainEvent>()
     val events : SharedFlow<DomainEvent> = _events.asSharedFlow()
+    private val scope = CoroutineScope(Default)
 
     override fun publish(event: DomainEvent) {
-        CoroutineScope(Default).launch {
+        scope.launch {
+            println(Thread.currentThread().id)
             _events.emit(event)
         }
     }
