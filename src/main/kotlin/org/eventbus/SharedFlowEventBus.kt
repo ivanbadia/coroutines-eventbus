@@ -4,12 +4,15 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.flow.*
 import mu.KotlinLogging
+import java.util.*
 
 class SharedFlowEventBus : EventBus {
     private val _events = MutableSharedFlow<DomainEvent>()
     private val logger = KotlinLogging.logger {}
     val events: SharedFlow<DomainEvent> = _events.asSharedFlow()
     val scope = CoroutineScope(Default + CoroutineName("EventBus") + SupervisorJob())
+    val subscribers: MutableList<DomainEventSubscriber<*>> =
+        Collections.synchronizedList(mutableListOf<DomainEventSubscriber<*>>())
 
     override fun publish(event: DomainEvent) {
         scope.launch {
@@ -19,6 +22,7 @@ class SharedFlowEventBus : EventBus {
 
     inline fun <reified EventType : DomainEvent> subscribe(subscriber: DomainEventSubscriber<EventType>): SharedFlowEventBus {
         scope.launch {
+            subscribers.add(subscriber)
             events
                 .filter { event -> event is EventType }
                 .map { it as EventType }

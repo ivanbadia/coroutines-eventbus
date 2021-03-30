@@ -12,7 +12,7 @@ class SharedFlowEventBusShould {
     private val orderCreatedSubscriber = OrderCreatedSubscriber()
     private val orderCancelledSubscriber = OrderCancelledSubscriber()
     private val errorSubscriber = SubscriberThatFails()
-    private lateinit var eventBus : EventBus
+    private lateinit var eventBus : SharedFlowEventBus
 
     @BeforeEach
     internal fun setUp() {
@@ -20,6 +20,9 @@ class SharedFlowEventBusShould {
             .subscribe(orderCreatedSubscriber)
             .subscribe(orderCancelledSubscriber)
             .subscribe(errorSubscriber)
+        await
+            .atMost(5, SECONDS)
+            .until { eventBus.subscribers.size == 3 }
     }
 
     @Test
