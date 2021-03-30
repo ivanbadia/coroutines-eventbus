@@ -24,7 +24,7 @@ Register the subscriber in the event bus:
 
 ```
 val eventBus = SharedFlowEventBus()
-eventBus.subscribe(OrderWasCreatedSubscriber())
+                        .subscribe(OrderWasCreatedSubscriber())
 ```
 
 Publish the event:
